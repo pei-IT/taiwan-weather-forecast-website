@@ -110,13 +110,14 @@ async function fetchForecast36hr(locationName) {
     let data;
 
     if (isGitHubPages) {
-      // GitHub Pages：直接呼叫氣象署 API
-      const params = new URLSearchParams({ format: 'JSON' });
+      // GitHub Pages：直接呼叫氣象署 API（Authorization 放在 query string 避免 CORS preflight）
+      const params = new URLSearchParams({
+        Authorization: CWA_API_KEY,
+        format: 'JSON'
+      });
       if (locationName) params.set('locationName', locationName);
 
-      const response = await fetch(`${CWA_BASE_URL}/F-C0032-001?${params.toString()}`, {
-        headers: { 'Authorization': CWA_API_KEY }
-      });
+      const response = await fetch(`${CWA_BASE_URL}/F-C0032-001?${params.toString()}`);
       const result = await response.json();
 
       if (result.success === 'true' || result.success === true) {
@@ -159,13 +160,14 @@ async function fetchForecastWeek(locationName) {
     let data;
 
     if (isGitHubPages) {
-      // GitHub Pages：直接呼叫氣象署 API
-      const params = new URLSearchParams({ format: 'JSON' });
+      // GitHub Pages：直接呼叫氣象署 API（Authorization 放在 query string 避免 CORS preflight）
+      const params = new URLSearchParams({
+        Authorization: CWA_API_KEY,
+        format: 'JSON'
+      });
       if (locationName) params.set('LocationName', locationName);
 
-      const response = await fetch(`${CWA_BASE_URL}/F-D0047-091?${params.toString()}`, {
-        headers: { 'Authorization': CWA_API_KEY }
-      });
+      const response = await fetch(`${CWA_BASE_URL}/F-D0047-091?${params.toString()}`);
       const result = await response.json();
 
       if (result.success === 'true' || result.success === true) {
