@@ -1,7 +1,18 @@
 /**
  * 台灣天氣預報前端應用程式
  * 資料來源：中央氣象署開放資料平台
+ * 
+ * 部署模式：
+ * - 有後端（localhost）：透過 /api/ 代理
+ * - GitHub Pages（靜態）：直接呼叫氣象署 API
  */
+
+// 判斷是否在 GitHub Pages 上運行（無後端）
+const isGitHubPages = window.location.hostname.includes('github.io');
+
+// 中央氣象署 API 設定（靜態部署時使用）
+const CWA_API_KEY = 'CWA-B99E63D1-F939-4176-8D01-35287E16C0CE';
+const CWA_BASE_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore';
 
 // DOM 元素
 const citySelect = document.getElementById('city-select');
@@ -41,8 +52,6 @@ const weatherIcons = {
 
 /**
  * 從 ElementValue 陣列中取出第一個有效值
- * API 回傳格式如：[{ "Temperature": "21" }] 或 [{ "Weather": "晴時多雲" }]
- * key 名稱不固定，所以取第一個物件的第一個 value
  */
 function getFirstValue(elementValues) {
   if (!elementValues || elementValues.length === 0) return null;
@@ -67,34 +76,20 @@ function getWeatherIcon(description) {
   return '🌡️';
 }
 
-/**
- * 顯示/隱藏載入動畫
- */
 function showLoading(show) {
   loadingEl.classList.toggle('hidden', !show);
 }
 
-/**
- * 顯示錯誤訊息
- */
 function showError(message) {
   errorEl.textContent = message;
   errorEl.classList.remove('hidden');
-  setTimeout(() => {
-    errorEl.classList.add('hidden');
-  }, 5000);
+  setTimeout(() => { errorEl.classList.add('hidden'); }, 5000);
 }
 
-/**
- * 隱藏錯誤訊息
- */
 function hideError() {
   errorEl.classList.add('hidden');
 }
 
-/**
- * 格式化時間
- */
 function formatTime(timeStr) {
   if (!timeStr) return '';
   const date = new Date(timeStr);
@@ -105,26 +100,46 @@ function formatTime(timeStr) {
 }
 
 /**
- * 取得36小時天氣預報（透過後端 API）
+ * 取得36小時天氣預報
  */
 async function fetchForecast36hr(locationName) {
   try {
     showLoading(true);
     hideError();
 
-    let url = '/api/forecast/36hr';
-    if (locationName) {
-      url += `?locationName=${encodeURIComponent(locationName)}`;
-    }
+    let data;
 
-    const response = await fetch(url);
-    const result = await response.json();
+    if (isGitHubPages) {
+      // GitHub Pages：直接呼叫氣象署 API
+      const params = new URLSearchParams({ format: 'JSON' });
+      if (locationName) params.set('locationName', locationName);
 
-    if (result.success) {
-      render36hrForecast(result.data);
+      const response = await fetch(`${CWA_BASE_URL}/F-C0032-001?${params.toString()}`, {
+        headers: { 'Authorization': CWA_API_KEY }
+      });
+      const result = await response.json();
+
+      if (result.success === 'true' || result.success === true) {
+        data = result.records.location;
+      } else {
+        showError('無法取得天氣資料');
+        return;
+      }
     } else {
-      showError(result.message || '無法取得天氣資料');
+      // 本地開發：透過後端代理
+      let url = '/api/forecast/36hr';
+      if (locationName) url += `?locationName=${encodeURIComponent(locationName)}`;
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.success) {
+        data = result.data;
+      } else {
+        showError(result.message || '無法取得天氣資料');
+        return;
+      }
     }
+
+    render36hrForecast(data);
   } catch (error) {
     console.error('取得預報失敗:', error);
     showError('網路連線失敗，請稍後再試');
@@ -134,26 +149,62 @@ async function fetchForecast36hr(locationName) {
 }
 
 /**
- * 取得一週天氣預報（透過後端 API）
+ * 取得一週天氣預報
  */
 async function fetchForecastWeek(locationName) {
   try {
     showLoading(true);
     hideError();
 
-    let url = '/api/forecast/week';
-    if (locationName) {
-      url += `?locationName=${encodeURIComponent(locationName)}`;
-    }
+    let data;
 
-    const response = await fetch(url);
-    const result = await response.json();
+    if (isGitHubPages) {
+      // GitHub Pages：直接呼叫氣象署 API
+      const params = new URLSearchParams({ format: 'JSON' });
+      if (locationName) params.set('LocationName', locationName);
 
-    if (result.success) {
-      renderWeekForecast(result.data);
+      const response = await fetch(`${CWA_BASE_URL}/F-D0047-091?${params.toString()}`, {
+        headers: { 'Authorization': CWA_API_KEY }
+      });
+      const result = await response.json();
+
+      if (result.success === 'true' || result.success === true) {
+        const records = result.records;
+        const locationsArr = records.Locations || records.locations || [];
+        let locations = null;
+
+        if (locationsArr.length > 0) {
+          locations = locationsArr[0].Location || locationsArr[0].location;
+        }
+
+        // 手動過濾縣市
+        if (locations && locations.length > 1 && locationName) {
+          const filtered = locations.filter(loc =>
+            (loc.LocationName || loc.locationName) === locationName
+          );
+          if (filtered.length > 0) locations = filtered;
+        }
+
+        data = locations || [];
+      } else {
+        showError('無法取得一週天氣資料');
+        return;
+      }
     } else {
-      showError(result.message || '無法取得一週天氣資料');
+      // 本地開發：透過後端代理
+      let url = '/api/forecast/week';
+      if (locationName) url += `?locationName=${encodeURIComponent(locationName)}`;
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.success) {
+        data = result.data;
+      } else {
+        showError(result.message || '無法取得一週天氣資料');
+        return;
+      }
     }
+
+    renderWeekForecast(data);
   } catch (error) {
     console.error('取得一週預報失敗:', error);
     showError('網路連線失敗，請稍後再試');
@@ -218,9 +269,6 @@ function render36hrForecast(locations) {
 
 /**
  * 渲染一週預報卡片
- * F-D0047-091 API 回傳結構：
- * Location[].WeatherElement[].Time[].ElementValue[{ key: value }]
- * WeatherElement 名稱為中文：天氣現象、最高溫度、最低溫度、12小時降雨機率
  */
 function renderWeekForecast(locations) {
   if (!locations || locations.length === 0) {
@@ -241,7 +289,6 @@ function renderWeekForecast(locations) {
       `;
     }
 
-    // 用中文名稱查找天氣要素
     const findElement = (name) => elements.find(e =>
       (e.ElementName || e.elementName) === name
     );
@@ -251,7 +298,6 @@ function renderWeekForecast(locations) {
     const maxT = findElement('最高溫度');
     const pop = findElement('12小時降雨機率');
 
-    // 取得時段資料
     const wxTimes = wx?.Time || wx?.time || [];
     const periods = wxTimes.slice(0, 14);
 
@@ -331,7 +377,6 @@ function searchWeather() {
 
 // 事件監聽
 searchBtn.addEventListener('click', searchWeather);
-
 citySelect.addEventListener('change', searchWeather);
 
 tabs.forEach(tab => {
