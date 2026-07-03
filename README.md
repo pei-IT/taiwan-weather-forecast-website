@@ -6,11 +6,9 @@
 
 - 📋 全台 22 縣市 36 小時天氣預報
 - � 未來一週天氣預報
-- �🔍 依縣市篩選查詢
-- � 即時氣象觀測站資料
+- �🔍 依縣市篩選查詢- 
 - �📱 響應式設計，支援手機與桌面瀏覽
-- 🎨 美觀的天氣圖示與卡片式介面
-- 🌐 支援 GitHub Pages 靜態部署（無需後端）
+- 🎨 美觀的天氣圖示與卡片式介面 
 
 ## 技術架構
 
@@ -18,8 +16,6 @@
 - **前端**：HTML5 + CSS3 + Vanilla JavaScript
 - **HTTP 客戶端**：httpx（非同步請求）
 - **資料來源**：中央氣象署開放資料平台 API
-- **測試**：Playwright（E2E）
-- **部署**：Docker / GitHub Pages
 
 ## 使用的 API 資料集
 
@@ -47,7 +43,7 @@
 └── .gitignore
 ```
 
-## 快速開始
+## 安裝與執行    
 
 ### 1. 取得 API 授權碼
 
@@ -77,11 +73,6 @@ python app.py
 
 API 文件（Swagger UI）：http://localhost:3001/docs
 
-### 4. Docker 部署
-
-```bash
-docker compose up -d
-```
 
 ## API 端點
 
@@ -89,13 +80,12 @@ docker compose up -d
 |------|------|------|
 | GET | `/api/forecast/36hr` | 36 小時天氣預報（可選 `?locationName=臺北市`） |
 | GET | `/api/forecast/week` | 一週天氣預報（可選 `?locationName=臺北市`） |
-| GET | `/api/observation` | 即時氣象觀測站資料 |
 | GET | `/api/debug/week` | 除錯用：查看 API 原始回傳結構 |
 
-## GitHub Pages 部署
 
-前端支援直接部署至 GitHub Pages，不需要後端伺服器。`public/app.js` 會自動偵測環境，在 GitHub Pages 上直接呼叫氣象署 API。
+## 注意事項  
 
-## 授權
+- 中央氣象署 API 有呼叫頻率限制，請勿過度頻繁請求
+- 本站資料僅供參考，實際天氣狀況請以中央氣象署官方公告為準
 
-資料來源：[交通部中央氣象署開放資料平台](https://opendata.cwa.gov.tw/)
+
