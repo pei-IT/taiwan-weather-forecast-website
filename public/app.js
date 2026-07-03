@@ -10,7 +10,7 @@
 // 判斷是否在 GitHub Pages 上運行（無後端）
 const isGitHubPages = window.location.hostname.includes('github.io');
 
-// 中央氣象署 API 設定（靜態部署時使用）
+// 中央氣象署 API 設定（僅 GitHub Pages 靜態部署時使用）
 const CWA_API_KEY = 'CWA-B99E63D1-F939-4176-8D01-35287E16C0CE';
 const CWA_BASE_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore';
 
