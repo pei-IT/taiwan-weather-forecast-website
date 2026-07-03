@@ -1,11 +1,12 @@
 version: "3.8"
 services:
   web:
-    image: node:23-alpine3.20
+    image: python:3.12-slim
     ports:
       - "3001:3001"
     volumes:
       - .:/usr/src/app
     working_dir: /usr/src/app
-    command: node server.js
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt && python app.py"
     restart: unless-stopped

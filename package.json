@@ -2,16 +2,11 @@
   "name": "taiwan-weather-forecast",
   "version": "1.0.0",
   "description": "台灣天氣預報網站 - 使用中央氣象署開放資料",
-  "main": "server.js",
+  "main": "app.py",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.22.2",
-    "node-fetch": "^2.7.0"
+    "start": "python app.py",
+    "dev": "python app.py",
+    "test": "npx playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
